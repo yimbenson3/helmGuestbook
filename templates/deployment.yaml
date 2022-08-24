@@ -1,0 +1,62 @@
+# SOURCE: https://cloud.google.com/kubernetes-engine/docs/tutorials/guestbook
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- if .Values }}
+  namespace: {{ .Values.namespace | default "default" | quote}}
+  {{- end}}
+  name: "{{.Values.deployment.name }}"
+  labels:
+    app: "{{.Values.name}}"
+    role: leader
+    tier: backend
+spec:
+  replicas: {{.Values.deployment.replicas}}
+  selector:
+    matchLabels:
+      app: "{{.Values.name}}"
+  template:
+    metadata:
+      labels:
+        app: "{{.Values.name}}"
+        role: leader
+        tier: backend
+    spec:
+      containers:
+      - name: leader
+        image: "docker.io/redis:6.0.5"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 6379
+        {{- if .Values.deployment.resources }}
+        resources:
+          {{- if .Values.deployment.resources.requests }}
+          requests:
+            memory: {{ .Values.deployment.resources.requests.memory | default "50Mi" | quote }}
+            cpu: {{ .Values.deployment.resources.requests.cpu | default "10m" | quote }}
+          {{- else}}
+          requests:
+            memory: "50Mi"
+            cpu: "10m"
+          {{- end}}
+          {{- if .Values.deployment.resources.limits }}
+          limits:
+            memory: {{ .Values.deployment.resources.limits.memory | default "1024Mi" | quote }}
+            cpu: {{ .Values.deployment.resources.limits.cpu | default "1" | quote }}
+          {{- else}}  
+          limits:
+            memory: "1024Mi"
+            cpu: "1"
+          {{- end }}
+        {{- else }}
+        resources:
+          requests:
+            memory: "50Mi"
+            cpu: "10m"
+          limits:
+            memory: "1024Mi"
+            cpu: "1"
+        {{- end}}
